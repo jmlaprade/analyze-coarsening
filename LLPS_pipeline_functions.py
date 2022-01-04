@@ -256,5 +256,3 @@ def plot_results(result_path, dt, t0, dist_inspect):
         )
     plt.savefig(plot_path+'total_droplet_volume.png')
     plt.close()
- 
-    
