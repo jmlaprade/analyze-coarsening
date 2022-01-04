@@ -140,7 +140,18 @@ def analyze_data(raw_data, file_dir, prob_th, dt, t0, conv2):
             str(dt*(i+1)) + ' , ' + str(avg_R) + ' , '
             + str(N) + ' , ' + str(V_tot) + '\n')
         dataLog.close()
-        
+
+# ----------------------------------------------------------------------------
+# curve fitting functions for analysis
+# ----------------------------------------------------------------------------
+
+def lognormal_fit(x, sigma, mu, scale):
+    import numpy as np
+    preFactor = scale*(x*sigma*np.sqrt(2*np.pi))**-1
+    numerator = (np.log(x)-mu)**2
+    denominator = 2*sigma**2
+    return preFactor*np.exp(-numerator/denominator)
+
 # ----------------------------------------------------------------------------
 # plotting coarsening results from text files
 # ----------------------------------------------------------------------------
@@ -148,6 +159,7 @@ def plot_results(result_path, dt, t0, dist_inspect):
     import numpy as np
     import matplotlib.pyplot as plt
     from os import makedirs
+    from scipy.optimize import curve_fit
     
     plot_path = result_path + 'Plots\\'
     makedirs(
@@ -160,14 +172,46 @@ def plot_results(result_path, dt, t0, dist_inspect):
         dist = np.loadtxt(
                 result_path+'Distributions\\radii_'+str(int(i))+'.txt', 
                 )
+
+        #determine histogram counts for radius distribution
+        probCounts, binEdges = np.histogram(
+            dist, 
+            int(np.floor(np.sqrt(len(dist)))),
+            )
+        binCent = binEdges[1:] - (binEdges[1]-binEdges[0])/2
+        
+        #fit the distribution to a log-normal function
+        popt, pcov = curve_fit(
+            lognormal_fit,
+            binCent,
+            probCounts/len(dist),
+            )
+        
+        #plot radius distribution (with log-normal fit?)
         plt.figure()
-        plt.hist(dist, int(np.floor(np.sqrt(len(dist)))))
+        plt.plot(
+            binCent,
+            probCounts/len(dist),
+            'k.',
+            label='Measured distribution',
+            ) 
+        plt.plot(
+            binCent,
+            lognormal_fit(
+                binCent, 
+                popt[0], 
+                popt[1], 
+                popt[2]
+                ),
+            'r-',
+            label='Log-normal fit',
+            )
         plt.xlabel('Droplet radius, $r$ ($\mu$m)')        
-        plt.ylabel('Counts')
+        plt.ylabel('Probability, $P(r)$')
         plt.title('Droplet radius distribution, $t = $'+str(dt*i)+'s')
         plt.savefig(plot_path+'distribution_'+str(dt*i)+'.png')
         plt.close()
- 
+
     #load in data for droplet dynamics
     data = np.loadtxt(
         result_path+'results.txt', 
@@ -179,6 +223,7 @@ def plot_results(result_path, dt, t0, dist_inspect):
     plt.loglog(
         data[:,0],
         data[:,1],
+        'k.',
         )                                          
     plt.xlabel('Time, $t$ (s)')
     plt.ylabel('average radius, $< R >$ ($\mu$m)')
