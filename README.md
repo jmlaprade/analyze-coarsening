@@ -2,7 +2,6 @@
 
 This group of files should allow you to analyze large batches of data automatically from raw data, organized in a specific way.
 
-# data organization
 The current analysis pipeline requires the data to be organized in a particular way. All data that is supposed to be analyzed should all be on the same disk. For example, you may store all your data folders in a location such as "E:\MyDataDirectory\". This will wind up being your "dataDirectory" string in the main pipeline file. 
 
 Your experiment names are simply the folders which contain a folder that contains your images. The folder that contains the images should be called "DNA" (This can be changed in the files later if it becomes more applicable to other projects). For example, you might aquire a set of data that ImageJ saves in a single folder ("Default", usually).  You should seperate the droplet images from microtubule images before running the pipeline on the data.  The full path to the data should then look something like this: "E:\MyDataDirectory\ExperimentName\DNA\dataImages".  
